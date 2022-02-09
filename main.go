@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"jsonrpclite/jsonrpclite"
 	"strconv"
+	"strings"
 )
 
 type ParamData1 struct {
@@ -16,15 +17,18 @@ type ParamData2 struct {
 	B string
 }
 
-type ITest interface {
-	MyTest(arg1 string, arg2 int, arg3 ParamData1, arg4 ParamData2) string
+type Result struct {
+	A string
+	B string
+	C string
+	D string
 }
 
 type TestService struct {
 }
 
-func (test *TestService) MyTest(arg1 string, arg2 int, arg3 ParamData1, arg4 ParamData2) string {
-	return arg1 + " " + strconv.Itoa(arg2) + " " + strconv.Itoa(arg3.A) + " " + arg4.B + " from Test1"
+func (test *TestService) MyTest(arg1 string, arg2 int, arg3 ParamData1, arg4 ParamData2) Result {
+	return Result{arg1, strconv.Itoa(arg2), "[" + strconv.Itoa(arg3.A) + "]" + strings.Join(arg3.B, ","), "[" + strconv.Itoa(arg4.A) + "]" + arg4.B}
 }
 
 func main() {
@@ -38,9 +42,10 @@ func main() {
 
 	clientEngine := jsonrpclite.NewRpcHttpClientEngine("http://localhost:8080")
 	client := jsonrpclite.NewRpcClient(clientEngine)
-	result := client.SendString("ITest", "{\n    \"jsonrpc\": \"2.0\",\n    \"id\": 1,\n    \"method\": \"MyTest\",\n    \"params\": [\n      \"aaaaaaaa\",\n      10,\n      {\n        \"a\": 12,\n        \"b\": [ \"test\", \"test\", \"test\" ]\n      },\n      {\n        \"a\": 12,\n        \"b\": \"test\"\n      }\n    ]\n  }")
-	fmt.Print(result)
-
+	for i := 0; i < 100; i++ {
+		result := client.SendData("ITest", "MyTest", []any{"Hello", 999, ParamData1{666, []string{"你好", "世界"}}, ParamData2{555, "甜蜜的世界"}})
+		fmt.Print(result)
+	}
 	fmt.Scanln()
 	server.Stop()
 	fmt.Println("Rpc server stopped..")

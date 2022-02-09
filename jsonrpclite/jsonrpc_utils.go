@@ -159,10 +159,9 @@ func createResponseData(response rpcResponse) map[string]any {
 	result := make(map[string]any)
 	result["jsonrpc"] = "2.0"
 	result["id"] = response.id
-	switch response.result.(type) {
-	case *rpcError:
+	if response.isError {
 		result["error"] = response.result
-	default:
+	} else {
 		result["result"] = response.result
 	}
 	return result
